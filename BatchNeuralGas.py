@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pylab as plt
 import os
 import shutil
-import cPickle
 
 
 class BatchNeuralGas:
@@ -33,7 +32,7 @@ class BatchNeuralGas:
     def execute(self, inputs, path_dir='img'):
         # initialize
         self.x = inputs
-        self.node = [np.average(self.x, axis=0)for _ in xrange(self.num_node)]
+        self.node = [np.average(self.x, axis=0)for _ in range(self.num_node)]
 
         # make output directory
         if os.path.exists(path_dir):
@@ -84,9 +83,10 @@ if __name__ == '__main__':
     data = np.vstack((data, 0.75 * np.random.randn(250, 2) + np.array([5., 5.])))
     data = np.vstack((data, 0.75 * np.random.randn(250, 2) + np.array([4., -3.])))
 
+    # dump demo-data
+    import cPickle
+    cPickle.dump(data, open('input_data', 'wb'))
+
     # Neural Gas
     ng = BatchNeuralGas(num_node=50, t_max=100, lamb=5.)
     ng.execute(data)
-
-    print ng.labeling()
-    cPickle.dump(data, open('input_data', 'wb'))
