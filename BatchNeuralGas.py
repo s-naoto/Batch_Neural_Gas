@@ -31,15 +31,19 @@ class BatchNeuralGas:
                 self.k[d[1], p] = float(i)
             del dist
 
-    def execute(self, inputs, path_dir='img'):
+    def execute(self, inputs, path_dir=None):
         # initialize
         self.x = inputs
         self.node = [np.average(self.x, axis=0)for _ in range(self.num_node)]
+        width = float(max(inputs[:, 0]) - min(inputs[:, 0]))
+        height = float(max(inputs[:, 1]) - min(inputs[:, 1]))
+        aspect = height / width
 
         # make output directory
-        if os.path.exists(path_dir):
-            shutil.rmtree(path_dir)
-        os.mkdir(path_dir)
+        if path_dir is not None:
+            if os.path.exists(path_dir):
+                shutil.rmtree(path_dir)
+            os.mkdir(path_dir)
 
         for t in xrange(self.t_max):
 
@@ -57,14 +61,15 @@ class BatchNeuralGas:
                 print t, self.error()
 
             # save current state to image
-            w = np.array(self.node)
-            fig = plt.figure(figsize=(5, 5), dpi=30)
-            plt.xlim(min(self.x[:, 0]) - 0.5, max(self.x[:, 0]) + 0.5)
-            plt.ylim(min(self.x[:, 1]) - 0.5, max(self.x[:, 1]) + 0.5)
-            plt.scatter(self.x[:, 0], self.x[:, 1], marker='o', color='b', s=10)
-            plt.scatter(w[:, 0], w[:, 1], marker='*', color='r', s=60)
-            plt.savefig(path_dir + '/' + '%03d' % t + '.png')
-            plt.close(fig)
+            if path_dir is not None:
+                w = np.array(self.node)
+                fig = plt.figure(figsize=(5., 5. * aspect), dpi=30)
+                plt.xlim(min(self.x[:, 0]) - 0.5, max(self.x[:, 0]) + 0.5)
+                plt.ylim(min(self.x[:, 1]) - 0.5, max(self.x[:, 1]) + 0.5)
+                plt.scatter(self.x[:, 0], self.x[:, 1], marker='o', color='b', s=10)
+                plt.scatter(w[:, 0], w[:, 1], marker='*', color='r', s=60)
+                plt.savefig(path_dir + '/' + '%03d' % t + '.png')
+                plt.close(fig)
 
     def error(self):
         return np.sum([np.amin([np.dot(x_ - n, x_ - n) for n in self.node]) for x_ in self.x])
