@@ -2,12 +2,14 @@ import numpy as np
 import matplotlib.pylab as plt
 import os
 import shutil
+from make_data import Circle, Rect, Gauss
+import sys
 
 
 class BatchNeuralGas:
-    def __init__(self, num_node=10, lamb=0.5, t_max=5000):
-        self.lamb_i = lamb
-        self.lamb_f = 0.1
+    def __init__(self, num_node=10, lamb_i=0.5, lamb_f=0.05, t_max=5000):
+        self.lamb_i = lamb_i
+        self.lamb_f = lamb_f
         self.t_max = t_max
         self.num_node = num_node
         self.node = None
@@ -56,7 +58,9 @@ class BatchNeuralGas:
 
             # save current state to image
             w = np.array(self.node)
-            fig = plt.figure(figsize=(3.5, 3.5), dpi=30)
+            fig = plt.figure(figsize=(5, 5), dpi=30)
+            plt.xlim(min(self.x[:, 0]) - 0.5, max(self.x[:, 0]) + 0.5)
+            plt.ylim(min(self.x[:, 1]) - 0.5, max(self.x[:, 1]) + 0.5)
             plt.scatter(self.x[:, 0], self.x[:, 1], marker='o', color='b', s=10)
             plt.scatter(w[:, 0], w[:, 1], marker='*', color='r', s=60)
             plt.savefig(path_dir + '/' + '%03d' % t + '.png')
@@ -78,15 +82,49 @@ class BatchNeuralGas:
         return label
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print "usage: " + sys.argv[0] + " 'data-shape'"
+        print "'data-shape' is selected in: "
+        print "     'gaussian', 'rings', 'rectangle', '2circles'"
+        exit(0)
+
+    d_shape = sys.argv[1]
+    if d_shape not in ['gaussian', 'rings', 'rectangle', '2circles']:
+        print "'data-shape' must be choose in: "
+        print "     'gaussian', 'rings', 'rectangle', '2circles'"
+        exit(0)
+
     # make demo-data
-    data = 0.75 * np.random.randn(250, 2) + np.array([-1., 1.])
-    data = np.vstack((data, 0.75 * np.random.randn(250, 2) + np.array([5., 5.])))
-    data = np.vstack((data, 0.75 * np.random.randn(250, 2) + np.array([4., -3.])))
+    data = None
+
+    if d_shape == 'gaussian':
+        # 3 gaussian
+        c1 = Gauss(sigma=0.75, mu_x=-1., mu_y=1.)
+        c2 = Gauss(sigma=0.75, mu_x=5., mu_y=5.)
+        c3 = Gauss(sigma=0.75, mu_x=4., mu_y=-3.)
+        data = np.vstack((c1.set_data(250), c2.set_data(250), c3.set_data(250)))
+
+    elif d_shape == 'rings':
+        # 2 rings
+        r1 = Circle(radius=2., x=0., y=0.)
+        r2 = Circle(radius=4., x=0., y=0.)
+        data = np.vstack((r1.set_data(250, is_fill=False), r2.set_data(250, is_fill=False)))
+
+    elif d_shape == 'rectangle':
+        # 1 rectangle
+        f1 = Rect(edge=2., x=0, y=0.)
+        data = f1.set_data(500, is_fill=True)
+
+    elif d_shape == '2circles':
+        # 2-size circles
+        c1 = Circle(radius=1., x=-1., y=0.)
+        c2 = Circle(radius=2., x=4., y=0.)
+        data = np.vstack((c1.set_data(250, is_fill=True), c2.set_data(250, is_fill=True)))
 
     # dump demo-data
     import cPickle
     cPickle.dump(data, open('input_data', 'wb'))
 
     # Neural Gas
-    ng = BatchNeuralGas(num_node=50, t_max=100, lamb=5.)
-    ng.execute(data)
+    ng = BatchNeuralGas(num_node=50, t_max=300, lamb_i=7.)
+    ng.execute(data, path_dir=d_shape)
