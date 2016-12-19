@@ -89,13 +89,13 @@ class BatchNeuralGas:
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print "usage: " + sys.argv[0] + " 'data-shape'"
-        print "'data-shape' is selected in: "
+        print "'data-shape' is chosen from: "
         print "     'gaussian', 'rings', 'rectangle', '2circles'"
         exit(0)
 
     d_shape = sys.argv[1]
     if d_shape not in ['gaussian', 'rings', 'rectangle', '2circles']:
-        print "'data-shape' must be choose in: "
+        print "'data-shape' must be chosen from: "
         print "     'gaussian', 'rings', 'rectangle', '2circles'"
         exit(0)
 
